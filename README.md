@@ -452,14 +452,43 @@
 ## Section 4
 
 * Identify the benefits of using multiple tasks in Jobs.
+    * Modularity and maintenance: breaking a large job into multiple tasks makes it easier to manage (or troubleshoot).
+    * Parallelism 
+    * Orchestration: better tracking of data flow, ensuring downstream tasks only run when upstream tasks have succeeded (https://docs.databricks.com/aws/en/jobs/run-if)
 * Set up a predecessor task in Jobs.
+    1. Create multiple tasks within the same job
+    2. For the task that must run after another, go to edit task and select from the drop-down menu “Depends on”
 * Identify a scenario in which a predecessor task should be set up.
+    * common example: data ingestion followed by data transformation
+        * You have a notebook or workflow that ingests raw data from external sources. Only after completion, should the data transformation task begin
 * Review a task's execution history.
+    1. Go to a job
+    2. Select Runs tab
+    3. Click on a particular run (and select List view from the top) 
+    4. To see detailed information about each task, click on a particular task name of your choosing. There, you can also access run events from the right side of the page
 * Identify CRON as a scheduling opportunity.
+    * https://docs.databricks.com/aws/en/jobs/scheduled
+    * Cron is designed to schedule recurring tasks at regular intervals.
+    * In the Schedules & Triggers section (Trigger type set to Scheduled) in the Jobs UI, you can choose to Show cron syntax and then provide a standard CRON expression.
+    * Examples:
+        * If you want to run a job every day for up to 30 days, you could use the cron expression "0 0 * * *" to run the job every day at midnight. However, you would need to implement additional logic outside of the cron schedule to stop the job after 30 days (https://community.databricks.com/t5/get-started-discussions/how-to-schedule-job-in-workflow-for-every-30-days/td-p/36889)
+        * You could specify a CRON schedule to run at 2 AM on weekdays or to run at 6 PM on the last day of the month, etc.
 * Debug a failed task.
+    * Check the Run Logs: In the task’s run details, review the stdout/stderr logs, the Databricks driver logs, and any error messages reported.
+    * If it’s a notebook task, open the notebook output. If it’s a Python or Spark submit task, look at the logs from the driver and executors.
+    * Check cluster event logs (look for possible out of memory, worker failures etc.)
+    * Ensure that the data needed by your task was successfully created by any predecessor tasks
+    * Rerun with additional logging & debugging statements (if necessary)
 * Set up a retry policy in case of failure.
+    * Tasks settings (Edit task button) -> Retries -> Add
+    * You can specify how many times a task should automatically retry upon failure and optionally add a delay between retries
 * Create an alert in the case of a failed task.
+    * Task View -> Notifications -> Add
+    * Provide a destination (email, Slack, webhooks etc.) For all these to be available, you’ll have to navigate to Settings-> Notifications (under Workspace admin section) -> Manage
 * Identify that an alert can be sent via email.
+    * Task View -> Notifications -> Add. Here you should have the “Email address” option in the “Enter destination” drop-down menu
+    * If not, navigate to Settings-> Notifications (under Workspace admin section) -> Manage -> Add destination -> Email from the “Type” drop-down menu
+
 
 
 ## Section 5
