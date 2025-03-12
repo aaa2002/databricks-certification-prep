@@ -494,14 +494,104 @@
 ## Section 5
 
 * Identify one of the four areas of data governance.
-* Compare and contrast meta-stores and catalogs.
+    * https://www.databricks.com/discover/data-governance#key
+    * Data Cataloging:
+        * Centralises metadata to help stakeholders discover, understand and access data.
+        * Provides a searchable index of an organization’s data assets, including structure, usage, and location.
+        * Reduces redundancy, improves collaboration, and streamlines governance.
+    * Data Quality:
+        * Ensures accuracy, completeness, and timeliness of data for decision-making.
+        * Evaluates data quality attributes and enforces data-quality rules.
+        * Safeguards against flawed insights and resource misallocation.
+    * Data Classification:
+        * Organises data based on sensitivity, value, and criticality.
+        * Helps implement targeted security measures and mitigate risks.
+        * Enhances data governance by ensuring the right protective policies for each data type.
+    * Data Security:
+        * Focuses on access controls that specify who can view or modify data.
+        * Protects sensitive data from unauthorized access and potential breaches.
+        * Supports compliance with regulations (e.g., GDPR, CCPA) and maintains customer trust.
+* Compare and contrast meta-stores and catalogs. 
+    * https://partner-academy.databricks.com/learn/courses/2522/get-started-with-databricks-for-data-engineering/lessons/26859/unity-catalog-overview
+    * Metastore:
+        * The top-level container in Unity Catalog that holds a collection of catalogs.
+        * You typically assign one metastore per region (best practice is to co-locate it with your Databricks workspace).
+        * A Unity Catalog metastore manages authentication, identity, and permissions at the highest level.
+        * Essentially functions as a reference for a collection of metadata and a link to a cloud storage container
+    * Catalog:
+        * A logical grouping of databases (schemas) within a metastore.
+        * Within each catalog, you have schemas and, inside schemas, you have tables, views, volumes, functions, models
+        * You access these assets, using a three level namespace. Querying data from a table: `SELECT * FROM catalog1.schema1.table`
+        * Allows you to organise data by business domain or functional area (e.g., finance_catalog, marketing_catalog).
 * Identify Unity Catalog securables.
-* Define a service principal.
+    * https://docs.databricks.com/aws/en/data-governance/unity-catalog/manage-privileges/privileges
+    * CATALOG: The first layer of the object hierarchy, used to organize your data assets. A foreign catalog is a special catalog type that mirrors a database in an external data system in a Lakehouse Federation scenario.
+    * SCHEMA: Also known as databases, schemas are the second layer of the object hierarchy and contain tables and views.
+    * TABLE: The lowest level in the object hierarchy, tables can be external (stored in external locations in your cloud storage of choice) or managed tables (stored in a storage container in your cloud storage that you create expressly for Databricks).
+    * VIEW: A read-only object created from a query on one or more tables that is contained within a schema.
+    * MATERIALIZED VIEW: An object created from a query on one or more tables that is contained within a schema. Its results reflect the state of data when it was last refreshed.
+    * VOLUME: The lowest level in the object hierarchy, volumes can be external (stored in external locations in your cloud storage of choice) or managed (stored in a storage container in your cloud storage that you create expressly for Databricks).
+    * FUNCTION: A user-defined function or an MLflow registered model that is contained within a schema.
+    * Model: An MLflow registered model is a specific type of function. Models are listed separately from other functions in Catalog Explorer, but when you grant a privilege on a model using SQL, you use GRANT ON FUNCTION.
+    * EXTERNAL LOCATION: An object that contains a reference to a storage credential and a cloud storage path that is contained within a Unity Catalog metastore.
+    * SERVICE CREDENTIAL: An object that encapsulates a long-term cloud credential that provides access to an external service. Contained in a Unity Catalog metastore.
+    * STORAGE CREDENTIAL: An object that encapsulates a long-term cloud credential that provides access to cloud storage that is contained within a Unity Catalog metastore.
+    * CONNECTION: An object that specifies a path and credentials for accessing an external database system in a Lakehouse Federation scenario.
+    * SHARE: A logical grouping for the tables you intend to share using Delta Sharing. A share is contained within a Unity Catalog metastore.
+    * RECIPIENT: An object that identifies an organization or group of users that can have data shared with them using Delta Sharing. These objects are contained within a Unity Catalog metastore.
+    * PROVIDER: An object that represents an organization that has made data available for sharing using Delta Sharing. These objects are contained within a Unity Catalog metastore.
+    * CLEAN ROOM: An object that represents a secure and privacy-protecting environment, managed by Databricks, where multiple parties can collaborate without direct access to each other’s data.
+* Define a service principal. 
+    * https://docs.databricks.com/aws/en/admin/users-groups/service-principals
+    * A service principal is an identity that you create in Databricks for use with automated tools, jobs, and applications. 
+    * Service principals give automated tools and scripts API-only access to Databricks resources, providing greater security than using users or groups.
+    * Unlike a Databricks user, a service principal is an API-only identity; it cannot be used to access the Databricks UI.
 * Identify the cluster security modes compatible with Unity Catalog.
+    * https://docs.databricks.com/aws/en/compute/access-mode-limitations#general-uc
+    * NOTE: Access modes have been renamed. Shared access mode is now Standard. Single user access mode is now Dedicated and can be assigned to a single user or group.
+    * Databricks recommends using standard access mode for most workloads.
+        * Dedicated Access Mode: Ties the cluster to a single user identity. Often used when you want per-user isolation.
+        * Standard Access Mode: A multi-user environment where table access control can be enforced via Unity Catalog.
 * Create a UC-enabled all-purpose cluster.
+    1. Confirm the workspace is UC enabled (`SELECT CURRENT_METASTORE();` -> it should return a metastore ID)
+    2. To run Unity Catalog workloads, compute resources must comply with certain security requirements. Thus, you should create an APC with either Standard or Dedicated Access Modes
+    * SQL warehouses always comply with UC requirements
 * Create a DBSQL warehouse.
+    * https://docs.databricks.com/aws/en/compute/sql-warehouse/create#advanced
+    1. Go to SQL Warehouses (sidebar) & click Create SQL Warehouse.
+    2. Provide a name, choose the size, and under Advanced options, ensure Unity Catalog is enabled (option will appear if UC is enabled for the workspace).
+    3. Save. Once it’s running, you can run SQL queries that reference the Unity Catalog three-level namespace.
 * Identify how to query a three-layer namespace.
+    * The hierarchy of database objects in any Unity Catalog metastore is divided into three levels, represented as a three-level namespace (catalog.schema.table-etc) when you reference tables, views, volumes, models, and functions.
+    * Examples:
+        * main.default.sales_records
+        * finance_catalog.q1_financials.transactions
 * Implement data object access control
+    * You can grant and revoke permissions to catalogs, schemas, tables, etc.
+    * Example: 
+        * Grant SELECT on a specific table to a user
+        ```
+            GRANT SELECT ON TABLE my_catalog.my_schema.my_table 
+            TO user some_user@databricks.com;
+        ```
+        * Revoke SELECT from that user
+        ```
+            REVOKE SELECT ON TABLE my_catalog.my_schema.my_table 
+            FROM user some_user@databricks.com;
+        ```
 * Identify colocating meta-stores with a workspace as best practice.
+    * https://learn.microsoft.com/en-us/azure/databricks/data-governance/unity-catalog/azure-managed-identities#use-a-managed-identity-to-access-the-unity-catalog-root-storage-account
+    * Databricks strongly recommends co-locating the Unity Catalog metastore with the workspaces that will use it. This means:
+        * If your workspace is in us-west-2, create your Unity Catalog metastore in us-west-2.
+        * Minimizes latency and cost from cross-region data access.
+        * Reduces complexity in cloud networking and IAM configuration.
 * Identify using service principals for connections as best practice.
-* Identify the segregation of business units across catalog as best practice.
+    * https://learn.microsoft.com/en-us/azure/databricks/security/auth/access-control/service-principal-acl
+    * For scheduled jobs, automated scripts, or third-party tools:
+        * Use service principals instead of personal user credentials.
+        * Improves security (easier to rotate, revoke, or audit) and avoids tying automation to a specific personal account.
+* Identify the segregation of business units across catalog as best practice. 
+    * https://learn.microsoft.com/en-us/azure/databricks/lakehouse-architecture/operational-excellence/best-practices#define-environment-isolation-strategy
+    * Isolate different business units with their own workspaces to avoid sharing the workspace administrator and to ensure that no assets in Databricks are shared unintentionally between business units.
+    * Isolate software development lifecycle environments (such as development, staging, and production). 
+    * For example, a separate production workspace allows you to test new workspace settings before applying them to production. Or the production environment might require more stringent workspace settings than the development environment. If you must deploy development, staging, and production environments on different virtual networks, you also need different workspaces for the three environments.
